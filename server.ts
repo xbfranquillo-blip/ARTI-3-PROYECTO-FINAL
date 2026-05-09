@@ -28,25 +28,28 @@ apiRouter.post("/chat", async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return res.status(500).json({ 
-        error: "Servicio de IA no configurado en el servidor Vercel. Verifica las Variables de Entorno." 
+        error: "Servicio de IA no configurado. Verifica GEMINI_API_KEY en Vercel/Secrets." 
       });
     }
 
     const { messages, model, systemInstruction } = req.body;
     
-    // Importación dinámica para evitar problemas en el build si no es necesario
     const { GoogleGenAI } = await import("@google/genai");
     const genAI = new GoogleGenAI({ apiKey });
-    const generativeModel = genAI.getGenerativeModel({ 
-      model: model || "gemini-3-flash-preview",
-      systemInstruction: systemInstruction 
+    const modelToUse = model || "gemini-3-flash-preview";
+    
+    const result = await genAI.models.generateContent({ 
+      model: modelToUse,
+      contents: messages,
+      config: {
+        systemInstruction: systemInstruction 
+      }
     });
 
-    const result = await generativeModel.generateContent({ contents: messages });
-    res.json({ text: result.response.text() });
+    res.json({ text: result.text });
   } catch (error: any) {
-    console.error("Error en Proxy Vercel:", error);
-    res.status(500).json({ error: error.message || "Error interno del servidor" });
+    console.error("Error en Proxy:", error);
+    res.status(500).json({ error: error.message || "Error interno del Tutor IA" });
   }
 });
 

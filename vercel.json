@@ -3,9 +3,5 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/server.ts" },
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "builds": [
-    { "src": "server.ts", "use": "@vercel/node" },
-    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
   ]
 }
