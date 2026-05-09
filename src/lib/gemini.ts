@@ -16,10 +16,10 @@ export const getAIClient = () => {
   const apiKey = (customKey || envKey).trim();
   
   if (!apiKey) {
-    // No lanzamos error aquí para permitir fallbacks manuales en los componentes
     return null;
   }
 
+  // El constructor de @google/genai recibe un objeto con apiKey
   return new GoogleGenAI({ apiKey });
 };
 

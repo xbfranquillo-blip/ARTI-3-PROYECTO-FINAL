@@ -60,6 +60,8 @@ export default function ClinicalCasesSection() {
       [Proporciona las respuestas a las preguntas anteriores con un razonamiento lógico y paso a paso. Menciona específicamente cómo se altera la fisiología normal (repasando conceptos de Guyton) y la base estructural (Moore/Ross) de esa alteración].`;
 
       const aiClient = getAIClient();
+      if (!aiClient) throw new Error("Motor IA no configurado.");
+
       const result = await aiClient.models.generateContentStream({
         model: DEFAULT_MODEL,
         contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -83,22 +85,13 @@ export default function ClinicalCasesSection() {
       setIsLoading(false);
       
       if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("limit")) {
-      setError("Hubo un problema al generar el caso clínico. Por favor, intenta de nuevo.");
+        setError("Limite de capacidad alcanzado temporalmente. Por favor, intenta de nuevo en unos minutos.");
       } else if (errorMessage.includes("404")) {
-         setError("Error de carga del generador (404). Por favor, intenta forzar la actualización de la página (Ctrl+F5).");
-      } else if (
-        errorMessage.includes("400") ||
-        errorMessage.toLowerCase().includes("api key") ||
-        errorMessage.includes("API_KEY_INVALID") ||
-        errorMessage.includes("403")
-      ) {
-        setError(
-          "Error Crítico (403/400): Problema con la Clave API o Región del motor 2.5 Flash. Por favor, genera una nueva clave en https://aistudio.google.com/app/apikey y configúrala en la sección 'Configuración IA' para continuar."
-        );
+        setError("Error de carga del generador (404). El modelo no está disponible en esta región.");
+      } else if (errorMessage.includes("403") || errorMessage.includes("400")) {
+        setError("Error de Acceso (403/400). Hay un problema con la configuración de seguridad. Contacta con el administrador.");
       } else {
-        setError(
-          "No pudimos generar el caso clínico con Gemini 2.5. Verifica tu clave API o intenta con un tema más específico."
-        );
+        setError("No pudimos generar el caso clínico. Verifica tu conexión.");
       }
     }
   };

@@ -148,8 +148,8 @@ export default function TutorSection() {
         model: DEFAULT_MODEL,
         contents: history,
         config: {
-          ...DEFAULT_GENERATION_CONFIG,
           systemInstruction,
+          ...DEFAULT_GENERATION_CONFIG,
         },
       });
 
@@ -159,19 +159,19 @@ export default function TutorSection() {
         { id: modelMsgId, role: "model", text: "" },
       ]);
 
-      let fullResponse = "";
+      let fullText = "";
       for await (const chunk of result) {
         const chunkText = chunk.text;
         if (chunkText) {
-          fullResponse += chunkText;
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === modelMsgId ? { ...msg, text: fullResponse } : msg,
-            ),
+          fullText += chunkText;
+          setMessages((prev) => 
+            prev.map((msg) => 
+              msg.id === modelMsgId ? { ...msg, text: fullText } : msg
+            )
           );
         }
       }
-      
+
       setIsLoading(false);
     } catch (err: any) {
       console.error("Error generating response:", err);

@@ -71,6 +71,8 @@ export default function QuizSection() {
       ]`;
 
       const aiClient = getAIClient();
+      if (!aiClient) throw new Error("Motor IA no configurado.");
+
       const result = await aiClient.models.generateContent({
         model: DEFAULT_MODEL,
         contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -96,13 +98,13 @@ export default function QuizSection() {
       setIsLoading(false);
       
       if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("limit")) {
-        setError("Capacidad máxima alcanzada temporalmente. El Tutor ARTI 3 está atendiendo a muchos estudiantes en este momento. Por favor, intenta de nuevo en unos minutos.");
+        setError("Capacidad máxima alcanzada temporalmente. Por favor, intenta de nuevo en unos minutos.");
       } else if (errorMessage.includes("404")) {
-        setError("Error de configuración del modelo (404). Por favor, refresca la página (Ctrl+F5) para cargar la última versión del Tutor.");
+        setError("Error de configuración del modelo (404). El modelo no está disponible en esta región.");
       } else if (errorMessage.includes("403") || errorMessage.includes("400")) {
-        setError("Error Crítico (403/400): Problema con la Clave API o Región. Por favor, genera una nueva clave gratuita en https://aistudio.google.com/app/apikey y pégala en 'Configuración IA' para reactivar el Tutor.");
+        setError("Error de Acceso (403/400). Hay un problema con la configuración de seguridad. Contacta con el administrador.");
       } else {
-        setError("Error al generar el cuestionario (Motor 2.5). Asegúrate de tener una conexión estable y una clave API válida.");
+        setError("Error al generar el cuestionario. Asegúrate de tener una conexión estable.");
       }
     }
   };
@@ -211,7 +213,7 @@ export default function QuizSection() {
                     <div className="flex gap-0.5">
                       {[1,2,3,4].map(i => <div key={i} className="w-1.5 h-2.5 bg-indigo-500 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />)}
                     </div>
-                    <span className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter">Motor Gemini 2.5 Flash X-Force Activo</span>
+                    <span className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter">Motor Gemini Optimizado</span>
                   </div>
                   <span className="text-[8px] text-slate-400 font-medium">Latencia: Ultra Low</span>
                 </div>
