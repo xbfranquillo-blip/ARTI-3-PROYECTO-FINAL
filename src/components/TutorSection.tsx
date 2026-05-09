@@ -100,7 +100,6 @@ export default function TutorSection() {
     }));
 
     try {
-      const customKey = localStorage.getItem("arti3_custom_api_key");
       const systemInstruction = "Eres un tutor médico experto especializado en Ciencias Biomédicas para estudiantes de medicina. Tu nombre es 'Tutor ARTI 3'. Tu tarea es responder preguntas usando terminología médica precisa, basándote en la bibliografía médica clásica (Guyton y Hall para fisiología, Netter para anatomía, Ross para histología, Moore para anatomía clínica). Si se te proporciona una imagen, analízala con rigor académico, identificando estructuras o procesos fisiopatológicos visibles. IMPORTANTE: Genera siempre un RAZONAMIENTO PASO A PASO en tus respuestas, deduciendo la respuesta a partir de principios básicos anatómicos, histológicos y fisiológicos antes de dar la conclusión final. Sé directo, didáctico y organiza tus respuestas con viñetas o negritas.";
       
       const parts: any[] = [{ text: userMsg.text || "Analiza esta imagen médica." }];
@@ -114,17 +113,17 @@ export default function TutorSection() {
       }
 
       history.push({ role: "user", parts });
+      const aiClient = getAIClient();
 
-      // MODO PRODUCCIÓN: Si NO hay clave personalizada, usamos nuestro propio servidor (Seguro para salir a la venta)
-      if (!customKey) {
-        console.log("Tutor ARTI 3: Usando canal seguro (Proxy Servidor)");
+      // SI NO HAY CLIENTE (Vercel Frontend sin Secret expuesto o sin Custom Key), usamos el PROXY
+      if (!aiClient) {
+        console.log("Tutor ARTI 3: Usando FALLBACK PROXY (Servidor Vercel)");
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: history,
             model: DEFAULT_MODEL,
-            config: DEFAULT_GENERATION_CONFIG,
             systemInstruction
           })
         });
@@ -144,9 +143,7 @@ export default function TutorSection() {
         return;
       }
 
-      // MODO PERSONALIZADO: Si el usuario puso su propia clave en configuración
-      console.log("Tutor ARTI 3: Usando clave personalizada del usuario");
-      const aiClient = getAIClient();
+      console.log("Tutor ARTI 3: Enviando consulta directa al modelo", DEFAULT_MODEL);
       const result = await aiClient.models.generateContentStream({
         model: DEFAULT_MODEL,
         contents: history,
@@ -182,13 +179,13 @@ export default function TutorSection() {
 
       setIsLoading(false);
       if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("limit")) {
-        setError("El Tutor ARTI 3 ha alcanzado su límite de consultas por hoy debido al alto tráfico. Por favor, intenta de nuevo en unos minutos.");
+        setError("El sistema ha alcanzado el límite de consultas temporales. Por favor, intenta de nuevo en unos minutos.");
       } else if (errorMessage.includes("404")) {
-        setError("Error de conexión (404). Por favor, intenta refrescar la página completamente (Ctrl+F5) para actualizar el Tutor ARTI 3.");
+        setError("Error de conexión (404). El modelo de IA solicitado no está disponible en esta región.");
       } else if (errorMessage.includes("403") || errorMessage.includes("400")) {
-        setError("Error Crítico (403/400): Problema con la Clave API o Región. Por favor, verifica tu configuración de Gemini.");
+        setError("Error de Acceso (403/400). Hay un problema con la configuración de seguridad de la IA. Por favor, contacta con el administrador.");
       } else {
-        setError("Error Crítico: No pudimos obtener respuesta del Tutor IA. Verifica tu conexión o configuración.");
+        setError("No se pudo obtener respuesta del Tutor. Por favor, verifica tu conexión.");
       }
       setMessages((prev) => prev.filter((msg) => msg.id !== userMsg.id));
     }
