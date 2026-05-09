@@ -100,7 +100,8 @@ export default function TutorSection() {
     }));
 
     try {
-      const aiClient = getAIClient();
+      const customKey = localStorage.getItem("arti3_custom_api_key");
+      const systemInstruction = "Eres un tutor médico experto especializado en Ciencias Biomédicas para estudiantes de medicina. Tu nombre es 'Tutor ARTI 3'. Tu tarea es responder preguntas usando terminología médica precisa, basándote en la bibliografía médica clásica (Guyton y Hall para fisiología, Netter para anatomía, Ross para histología, Moore para anatomía clínica). Si se te proporciona una imagen, analízala con rigor académico, identificando estructuras o procesos fisiopatológicos visibles. IMPORTANTE: Genera siempre un RAZONAMIENTO PASO A PASO en tus respuestas, deduciendo la respuesta a partir de principios básicos anatómicos, histológicos y fisiológicos antes de dar la conclusión final. Sé directo, didáctico y organiza tus respuestas con viñetas o negritas.";
       
       const parts: any[] = [{ text: userMsg.text || "Analiza esta imagen médica." }];
       
@@ -114,12 +115,44 @@ export default function TutorSection() {
 
       history.push({ role: "user", parts });
 
+      // MODO PRODUCCIÓN: Si NO hay clave personalizada, usamos nuestro propio servidor (Seguro para salir a la venta)
+      if (!customKey) {
+        console.log("Tutor ARTI 3: Usando canal seguro (Proxy Servidor)");
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: history,
+            model: DEFAULT_MODEL,
+            config: DEFAULT_GENERATION_CONFIG,
+            systemInstruction
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Error del servidor (${response.status})`);
+        }
+
+        const data = await response.json();
+        const modelMsgId = (Date.now() + 1).toString();
+        setMessages((prev) => [
+          ...prev,
+          { id: modelMsgId, role: "model", text: data.text },
+        ]);
+        setIsLoading(false);
+        return;
+      }
+
+      // MODO PERSONALIZADO: Si el usuario puso su propia clave en configuración
+      console.log("Tutor ARTI 3: Usando clave personalizada del usuario");
+      const aiClient = getAIClient();
       const result = await aiClient.models.generateContentStream({
         model: DEFAULT_MODEL,
         contents: history,
         config: {
           ...DEFAULT_GENERATION_CONFIG,
-          systemInstruction: "Eres un tutor médico experto especializado en Ciencias Biomédicas para estudiantes de medicina. Tu nombre es 'Tutor ARTI 3'. Tu tarea es responder preguntas usando terminología médica precisa, basándote en la bibliografía médica clásica (Guyton y Hall para fisiología, Netter para anatomía, Ross para histología, Moore para anatomía clínica). Si se te proporciona una imagen, analízala con rigor académico, identificando estructuras o procesos fisiopatológicos visibles. IMPORTANTE: Genera siempre un RAZONAMIENTO PASO A PASO en tus respuestas, deduciendo la respuesta a partir de principios básicos anatómicos, histológicos y fisiológicos antes de dar la conclusión final. Sé directo, didáctico y organiza tus respuestas con viñetas o negritas.",
+          systemInstruction,
         },
       });
 
@@ -337,7 +370,7 @@ export default function TutorSection() {
             </div>
             <p className="text-[10px] text-indigo-600 font-extrabold uppercase tracking-widest flex items-center justify-center gap-2 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
               <Sparkles className="w-3 h-3 fill-indigo-500" />
-              Núcleo Gemini 2.5 Flash X-Force (Ultra-Fast)
+              Núcleo Gemini 3 Flash (Optimización de Tráfico)
             </p>
           </div>
         </div>
