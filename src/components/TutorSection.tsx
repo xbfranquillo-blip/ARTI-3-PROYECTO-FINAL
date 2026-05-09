@@ -186,9 +186,9 @@ export default function TutorSection() {
       } else if (errorMessage.includes("404")) {
         setError("Error de conexión (404). Por favor, intenta refrescar la página completamente (Ctrl+F5) para actualizar el Tutor ARTI 3.");
       } else if (errorMessage.includes("403") || errorMessage.includes("400")) {
-        setError("Error Crítico (403/400): Problema con la Clave API o Región en el Núcleo 2.5 Flash. Genera una clave nueva en https://aistudio.google.com/app/apikey y pégala en 'Configuración IA' para restaurar el servicio.");
+        setError("Error Crítico (403/400): Problema con la Clave API o Región. Por favor, verifica tu configuración de Gemini.");
       } else {
-        setError("Error Crítico: No pudimos obtener respuesta del Núcleo 2.5. Verifica tu clave API en la sección de Configuración.");
+        setError("Error Crítico: No pudimos obtener respuesta del Tutor IA. Verifica tu conexión o configuración.");
       }
       setMessages((prev) => prev.filter((msg) => msg.id !== userMsg.id));
     }
@@ -370,7 +370,7 @@ export default function TutorSection() {
             </div>
             <p className="text-[10px] text-indigo-600 font-extrabold uppercase tracking-widest flex items-center justify-center gap-2 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
               <Sparkles className="w-3 h-3 fill-indigo-500" />
-              Núcleo Gemini 3 Flash (Optimización de Tráfico)
+              Núcleo Gemini (Optimización de Tráfico)
             </p>
           </div>
         </div>

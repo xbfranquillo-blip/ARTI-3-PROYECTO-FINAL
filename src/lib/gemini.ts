@@ -66,4 +66,4 @@ export const DEFAULT_GENERATION_CONFIG = {
   topP: 0.95,
 };
 
-export const DEFAULT_MODEL = "gemini-3-flash-preview"; // Motor estable de producción (Reemplaza a 2.0 por límites)
+export const DEFAULT_MODEL = "gemini-3-flash-preview"; // Motor estable de producción (Optimización v3)

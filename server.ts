@@ -39,9 +39,13 @@ apiRouter.post("/chat", async (req, res) => {
 
     const { messages, model, config, systemInstruction } = req.body;
     
-    // Pattern correcto según gemini-api skill (uso de genAI.models.generateContent)
+    // Usar gemini-3-flash-preview como estándar (gemini-1.5-flash está prohibido en el skill)
+    const modelToUse = model || "gemini-3-flash-preview";
+    
+    console.log(`[Proxy] Llamando a Gemini con modelo: ${modelToUse}`);
+
     const result = await genAI.models.generateContent({ 
-      model: model || "gemini-3-flash-preview",
+      model: modelToUse,
       contents: messages,
       config: {
         ...config,
@@ -54,6 +58,12 @@ apiRouter.post("/chat", async (req, res) => {
     console.error("Error en Proxy IA:", error);
     const status = error.status || 500;
     const message = error.message || "Error interno del Tutor IA";
+    
+    // Si es un 404, probablemente el modelo no existe o la región no es válida
+    if (status === 404) {
+      return res.status(404).json({ error: `Modelo no encontrado o no disponible: ${req.body.model || "gemini-3-flash-preview"}.` });
+    }
+    
     res.status(status).json({ error: message });
   }
 });

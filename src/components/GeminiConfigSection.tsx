@@ -235,7 +235,7 @@ export default function GeminiConfigSection() {
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
               <p className="text-xs text-slate-500 uppercase tracking-widest font-black mb-1">Motor del Sistema</p>
               <div className="flex items-center gap-2">
-                <p className="font-mono text-sm font-bold text-slate-700">Gemini 2.5 Flash X-Force</p>
+                <p className="font-mono text-sm font-bold text-slate-700">Gemini (Optimizado)</p>
                 <div className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full animate-pulse">ACTIVO</div>
               </div>
             </div>
