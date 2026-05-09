@@ -1,69 +1,36 @@
 import { GoogleGenAI } from "@google/genai";
 
 const STORAGE_KEY = "arti3_custom_api_key";
-const STORAGE_BASE_URL = "arti3_custom_base_url";
 
 export const getCustomKey = () => localStorage.getItem(STORAGE_KEY);
 export const setCustomKey = (key: string) => localStorage.setItem(STORAGE_KEY, key);
 export const removeCustomKey = () => localStorage.removeItem(STORAGE_KEY);
 
-export const getCustomBaseUrl = () => localStorage.getItem(STORAGE_BASE_URL);
-export const setCustomBaseUrl = (url: string) => localStorage.setItem(STORAGE_BASE_URL, url);
-export const removeCustomBaseUrl = () => localStorage.removeItem(STORAGE_BASE_URL);
+// El cliente de IA se inicializa siguiendo el skill gemini-api.
+export const isConfigured = () => !!(getCustomKey() || process.env.GEMINI_API_KEY);
 
-const MASTER_KEY = "AIzaSyAlqSjTmIBYyJar7Js7alZn20XhVuX3mSc";
-
-export const getAIClient = (forceFallback = false) => {
-  const customKey = (getCustomKey() || "").trim();
-  const customBaseUrl = (getCustomBaseUrl() || "").trim();
+export const getAIClient = () => {
+  const customKey = getCustomKey();
+  const envKey = process.env.GEMINI_API_KEY || "";
   
-  let envKey = "";
-  try {
-    // Definimos una forma segura de acceder a las variables de entorno sin que tsc se queje
-    const globalObj = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {} as any);
-    
-    // @ts-ignore
-    envKey = (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) || 
-             (globalObj.import?.meta?.env?.VITE_GEMINI_API_KEY) || 
-             "";
-    
-    // Intento alternativo para Vite si el anterior falla en el linter
-    if (!envKey) {
-      // @ts-ignore
-      envKey = import.meta.env?.VITE_GEMINI_API_KEY || "";
-    }
-  } catch (e) {}
-
-  const finalKey = (customKey || envKey || MASTER_KEY).trim();
-
-  const source = customKey ? "Personalizada" : (envKey ? "Entorno/Secrets" : "Maestra X-Force (Activa)");
-  console.log(`Tutor ARTI 3: Inicializado con clave ${source} (Longitud: ${finalKey.length})`);
-
-  // Configuration for GoogleGenAI
-  const config: any = {
-    apiKey: finalKey,
-  };
-
-  if (customBaseUrl) {
-    config.baseUrl = customBaseUrl.replace(/\/$/, "");
+  const apiKey = (customKey || envKey).trim();
+  
+  if (!apiKey) {
+    // No lanzamos error aquí para permitir fallbacks manuales en los componentes
+    return null;
   }
 
-  return new GoogleGenAI(config);
+  return new GoogleGenAI({ apiKey });
 };
 
-export const isUsingMasterKey = () => {
-  let hasEnvKey = false;
-  try {
-    // @ts-ignore
-    hasEnvKey = !!((typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) || (import.meta.env?.VITE_GEMINI_API_KEY));
-  } catch (e) {}
-  return !getCustomKey() && !hasEnvKey;
-};
+export const isUsingCustomKey = () => !!getCustomKey();
 
 export const DEFAULT_GENERATION_CONFIG = {
-  maxOutputTokens: 8192, // Aumento de capacidad a 8k tokens
-  temperature: 0.7,
+  // Se prefiere definir el tamaño de la respuesta en el systemInstruction, 
+  // pero dejamos valores base por compatibilidad.
+  temperature: 1,
   topP: 0.95,
 };
 
-export const DEFAULT_MODEL = "gemini-3-flash-preview"; // Motor estable de producción (Optimización v3)
+// Modelo recomendado por el skill para tareas de texto
+export const DEFAULT_MODEL = "gemini-3-flash-preview"; 
