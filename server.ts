@@ -1,12 +1,18 @@
 import express from "express";
 import path from "path";
 import cors from "cors";
+import { GoogleGenAI } from "@google/genai";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+// ---- CONFIGURACIÓN DE IA EN SERVIDOR (PRODUCCIÓN) ----
+const genAI = process.env.GEMINI_API_KEY 
+  ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) 
+  : null;
 
 // ---- TUS RUTAS DE API AQUÍ ----
 const apiRouter = express.Router();
@@ -20,6 +26,36 @@ apiRouter.use((req, res, next) => {
 apiRouter.get("/health", (req, res) => {
   console.log("API: Health check requested");
   res.json({ status: "ok", message: "La API integrada funciona correctamente" });
+});
+
+// Proxy Seguro para el Tutor IA
+apiRouter.post("/chat", async (req, res) => {
+  try {
+    if (!genAI) {
+      return res.status(500).json({ 
+        error: "Servicio de IA no configurado en el servidor. Falta GEMINI_API_KEY." 
+      });
+    }
+
+    const { messages, model, config, systemInstruction } = req.body;
+    
+    // Pattern correcto según gemini-api skill (uso de genAI.models.generateContent)
+    const result = await genAI.models.generateContent({ 
+      model: model || "gemini-3-flash-preview",
+      contents: messages,
+      config: {
+        ...config,
+        systemInstruction: systemInstruction
+      }
+    });
+
+    res.json({ text: result.text });
+  } catch (error: any) {
+    console.error("Error en Proxy IA:", error);
+    const status = error.status || 500;
+    const message = error.message || "Error interno del Tutor IA";
+    res.status(status).json({ error: message });
+  }
 });
 
 apiRouter.get("/users", (req, res) => {
